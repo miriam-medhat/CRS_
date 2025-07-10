@@ -16,15 +16,12 @@ namespace CRS.Models
         [ForeignKey("DepartmentId")]
         public Department Department { get; set; }
 
-       
-
         public int BuildingId { get; set; }
         [ForeignKey("BuildingId")]
         public DotNET.Models.Building Building { get; set; }
-
-
-
         public int RoomId { get; set; }
+
+
         [ForeignKey("RoomId")]
         public Room Room { get; set; }
 
