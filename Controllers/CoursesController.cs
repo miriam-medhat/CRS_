@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CRS.Data;
 using CRS.Models;
+using CRS.Dtos;
 
 namespace CRS.Controllers
 {
@@ -23,55 +24,60 @@ namespace CRS.Controllers
 
         // GET: api/Courses
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Course>>> GetCourses()
+        public async Task<ActionResult<IEnumerable<CoursesDto>>> GetCourses()
         {
-            return await _context.Courses.ToListAsync();
+            var courses = await _context.Courses
+                .Include(c => c.Department)
+                .Include(c => c.Building)
+                .Include(c => c.Room)
+                .Select(c => new CoursesDto
+                {
+                    Id = c.Id,
+                    Title = c.Title,
+                    Description = c.Description,
+                    DepartmentName = c.Department.Name,
+                    RoomName = c.Room.Name,
+                    BuildingName = c.Building.Name,
+                    Date = c.Date
+                })
+                .ToListAsync();
+
+            return Ok(courses);
         }
 
-        // GET: api/Courses/5
+
+      
+
+        // PUT: api/Courses/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpGet("{id}")]
-        public async Task<ActionResult<Course>> GetCourse(int id)
+        public async Task<ActionResult<CoursesDto>> GetCourse(int id)
         {
-            var course = await _context.Courses.FindAsync(id);
+            var course = await _context.Courses
+                .Include(c => c.Department)
+                .Include(c => c.Building)
+                .Include(c => c.Room)
+                .Where(c => c.Id == id)
+                .Select(c => new CoursesDto
+                {
+                    Id = c.Id,
+                    Title = c.Title,
+                    Description = c.Description,
+                    DepartmentName = c.Department.Name,
+                    RoomName = c.Room.Name,
+                    BuildingName = c.Building.Name,
+                    Date = c.Date
+                })
+                .FirstOrDefaultAsync();
 
             if (course == null)
             {
                 return NotFound();
             }
 
-            return course;
+            return Ok(course);
         }
 
-        // PUT: api/Courses/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutCourse(int id, Course course)
-        {
-            if (id != course.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(course).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CourseExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
 
         // POST: api/Courses
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -81,7 +87,17 @@ namespace CRS.Controllers
             _context.Courses.Add(course);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetCourse", new { id = course.Id }, course);
+            return CreatedAtAction(nameof(GetCourse), new { id = course.Id }, new CoursesDto
+            {
+                Id = course.Id,
+                Title = course.Title,
+                Description = course.Description,
+                DepartmentName = (await _context.Departments.FindAsync(course.DepartmentId))?.Name,
+                RoomName = (await _context.Rooms.FindAsync(course.RoomId))?.Name,
+                BuildingName = (await _context.Buildings.FindAsync(course.BuildingId))?.Name,
+                Date = course.Date
+            });
+            ;
         }
 
         // DELETE: api/Courses/5
