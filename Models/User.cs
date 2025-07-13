@@ -11,8 +11,11 @@ namespace CRS.Models
         [Required]
         [EmailAddress] //for email validation
         public string Email { get; set; }
-//pass
-//roles
+
+        [Required]
+         public string Password { get; set; }
+
+        public RolesEnum Roles { get; set; }
 
         public ICollection<Reservation> Reservations { get; set; } //user has many reservations
     }

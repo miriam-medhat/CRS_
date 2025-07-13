@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CRS.Data;
 using CRS.Models;
+using CRS.Dtos;
 
 namespace CRS.Controllers
 {
@@ -23,14 +24,60 @@ namespace CRS.Controllers
 
         // GET: api/Reservations
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Reservation>>> GetReservations()
+        public async Task<ActionResult<IEnumerable<ReservationDTo>>> GetReservations()
         {
-            return await _context.Reservations.ToListAsync();
+            var reservations = await _context.Reservations
+                .Include(r => r.User)
+                .Include(r => r.Course)
+                .Select(r => new ReservationDTo
+                {
+                    Id = r.Id,
+                    UserId = r.UserId,
+                    UserName = r.User.Name,
+                    CourseId = r.CourseId,
+                    CourseTitle = r.Course.Title,
+                    Status = r.Status,
+                    RequestDate = r.RequestDate
+                })
+                .ToListAsync();
+
+            return Ok(reservations);
         }
+
 
         // GET: api/Reservations/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Reservation>> GetReservation(int id)
+        public async Task<ActionResult<ReservationDTo>> GetReservation(int id)
+        {
+            var reservation = await _context.Reservations
+                .Include(r => r.User)
+                .Include(r => r.Course)
+                .Where(r => r.Id == id)
+                .Select(r => new ReservationDTo
+                {
+                    Id = r.Id,
+                    UserId = r.UserId,
+                    UserName = r.User.Name,         // Assumes User has a Name property
+                    CourseId = r.CourseId,
+                    CourseTitle = r.Course.Title,   // Assumes Course has a Title property
+                    Status = r.Status ,  // Converts enum to readable string
+                    RequestDate = r.RequestDate
+                })
+                .FirstOrDefaultAsync();
+
+            if (reservation == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(reservation);
+        }
+
+
+        // PUT: api/Reservations/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutReservation(int id, ReservationDTo updated)
         {
             var reservation = await _context.Reservations.FindAsync(id);
 
@@ -39,20 +86,9 @@ namespace CRS.Controllers
                 return NotFound();
             }
 
-            return reservation;
-        }
-
-        // PUT: api/Reservations/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutReservation(int id, Reservation reservation)
-        {
-            if (id != reservation.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(reservation).State = EntityState.Modified;
+            reservation.CourseId = updated.CourseId;
+            reservation.Status =updated.Status;
+            reservation.RequestDate = updated.RequestDate;
 
             try
             {
@@ -70,19 +106,55 @@ namespace CRS.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok(new
+            {
+                Message = "Reservation updated successfully",
+                reservation.Id,
+                reservation.CourseId,
+                reservation.Status,
+                reservation.RequestDate
+            });
         }
 
         // POST: api/Reservations
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Reservation>> PostReservation(Reservation reservation)
+        public async Task<ActionResult<ReservationDTo>> ReserveCourse(ReservationDTo dto)
         {
+            var course = await _context.Courses.FindAsync(dto.CourseId);
+
+            if (course == null || course.CourseStates != CourseStates.available)
+                return BadRequest("Course is not available.");
+
+            if (course.Capacity <= 0)
+                return BadRequest("Course is full.");
+
+            var existing = await _context.Reservations
+                .FirstOrDefaultAsync(r => r.UserId == dto.UserId && r.CourseId == dto.CourseId);
+
+            if (existing != null)
+                return BadRequest("You have already reserved this course.");
+
+            course.Capacity--;
+
+            var reservation = new Reservation
+            {
+                UserId = dto.UserId,
+                CourseId = dto.CourseId,
+                RequestDate = DateTime.Now,
+                Status = ReservationStatus.Pending,
+                
+            };
+            course.CourseStates = CourseStates.pending;
+
+
             _context.Reservations.Add(reservation);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetReservation", new { id = reservation.Id }, reservation);
+            return Ok();
         }
+
+
 
         // DELETE: api/Reservations/5
         [HttpDelete("{id}")]

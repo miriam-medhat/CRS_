@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using System.Runtime.Serialization;
 
 namespace CRS.Models
 {
@@ -20,6 +21,8 @@ namespace CRS.Models
         [ForeignKey("BuildingId")]
         public DotNET.Models.Building Building { get; set; }
         public int RoomId { get; set; }
+        public int Capacity { get; set; }
+        public CourseStates CourseStates { get; set; }
 
 
         [ForeignKey("RoomId")]

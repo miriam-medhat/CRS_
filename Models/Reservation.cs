@@ -20,7 +20,7 @@ namespace CRS.Models
 
         [ForeignKey("CourseId")]
         public Course Course { get; set; }
-        //capacity
+     
     }
 
     }
