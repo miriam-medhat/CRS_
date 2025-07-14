@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign Up</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <style>
+    body {
+      background-color: #f0f8ff;
+    }
+    .btn-primary {
+      background-color: #3399ff;
+      border: none;
+    }
+    .btn-primary:hover {
+      background-color: #007acc;
+    }
+    .form-container {
+      max-width: 450px;
+      margin: 10px auto;
+      padding: 30px;
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    }
+    .form-label {
+      font-weight: 500;
+    }
+    .password-requirements {
+        font-weight: 500;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+      margin-top: 5px;
+      margin-bottom: 15px;
+    }
+    .requirement {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+      color: #6c757d;
+    }
+    .requirement.valid {
+      color: #198754;
+    }
+    .requirement.invalid {
+      color: #dc3545;
+    }
+    .requirement-icon {
+      margin-right: 8px;
+    }
+    .login-link {
+      text-align: center;
+      margin-top: 15px;
+    }
+    .password-input-group {
+      display: flex;
+      align-items: center;
+    }
+    .password-input-group .form-control {
+      border-right: none;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    .password-input-group .btn {
+      border-left: none;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      background-color: #f8f9fa;
+      padding: 0.375rem 0.75rem;
+    }
+    .password-input-group .btn:hover {
+      background-color: #e9ecef;
+    }
+  </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="form-container">
+            <h2 class="mb-4 text-center">Create Account</h2>
+            <form id="signupForm" novalidate>
+                <div class="mb-3">
+                    <label for="signupName" class="form-label">Full Name</label>
+                    <input type="text" class="form-control" id="signupName" required />
+                    <div class="invalid-feedback">Please enter your name.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="signupEmail" class="form-label">Email address</label>
+                    <input type="email" class="form-control" id="signupEmail" required />
+                    <div class="invalid-feedback">Please enter a valid email.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="signupPassword" class="form-label">Password</label>
+                    <div class="password-input-group">
+                        <input type="password" class="form-control" id="signupPassword" required />
+                        <button class="btn btn-outline-secondary" type="button" id="toggleSignupPassword">
+                            <span id="toggleSignupIcon">🔒</span>
+                        </button>
+                    </div>
+                    <div class="password-requirements" id="signupPasswordRequirements">
+                        <small>Password must meet these requirements:</small>
+                        <div class="requirement" id="signup-req-length">
+                            <span class="requirement-icon">❌</span>
+                            <span>At least 8 characters</span>
+                        </div>
+                        <div class="requirement" id="signup-req-upper">
+                            <span class="requirement-icon">❌</span>
+                            <span>1 uppercase letter</span>
+                        </div>
+                        <div class="requirement" id="signup-req-lower">
+                            <span class="requirement-icon">❌</span>
+                            <span>1 lowercase letter</span>
+                        </div>
+                        <div class="requirement" id="signup-req-number">
+                            <span class="requirement-icon">❌</span>
+                            <span>1 number</span>
+                        </div>
+                        <div class="requirement" id="signup-req-special">
+                            <span class="requirement-icon">❌</span>
+                            <span>1 special character</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="signupConfirmPassword" class="form-label">Confirm Password</label>
+                    <div class="password-input-group">
+                        <input type="password" class="form-control" id="signupConfirmPassword" required />
+                        <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                            <span id="toggleConfirmIcon">🔒</span>
+                        </button>
+                    </div>
+                    <div class="invalid-feedback">Passwords must match.</div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Create Account</button>
+            </form>
+
+            <div class="login-link">
+                Already have an account? <a href="SignIn.htm">Sign In</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const signupForm = document.getElementById('signupForm');
+        const signupPassword = document.getElementById('signupPassword');
+        const signupConfirmPassword = document.getElementById('signupConfirmPassword');
+        const registerError = document.getElementById('registerError');
+
+        // Password requirement checker
+        function checkPasswordRequirements(pwd, prefix = 'signup-') {
+            const requirements = {
+                length: pwd.length >= 8,
+                upper: /[A-Z]/.test(pwd),
+                lower: /[a-z]/.test(pwd),
+                number: /[0-9]/.test(pwd),
+                special: /[!@#$%^&*(),.?":{}|<>]/.test(pwd)
+            };
+
+            for (const [key, met] of Object.entries(requirements)) {
+                const element = document.getElementById(`${prefix}req-${key}`);
+                if (element) {
+                    element.classList.toggle('valid', met);
+                    element.classList.toggle('invalid', !met);
+                    element.querySelector('.requirement-icon').textContent = met ? '✔' : '❌';
+                }
+            }
+
+            return Object.values(requirements).every(Boolean);
+        }
+
+        // Toggle password visibility
+        document.getElementById('toggleSignupPassword').addEventListener('click', () => {
+            const type = signupPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+            signupPassword.setAttribute('type', type);
+            document.getElementById('toggleSignupIcon').textContent = type === 'password' ? '🔒' : '🔓';
+        });
+
+        document.getElementById('toggleConfirmPassword').addEventListener('click', () => {
+            const type = signupConfirmPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+            signupConfirmPassword.setAttribute('type', type);
+            document.getElementById('toggleConfirmIcon').textContent = type === 'password' ? '🔒' : '🔓';
+        });
+
+        // Real-time password validation
+        signupPassword.addEventListener('input', () => {
+            checkPasswordRequirements(signupPassword.value);
+
+            if (signupConfirmPassword.value) {
+                const match = signupPassword.value === signupConfirmPassword.value;
+                signupConfirmPassword.classList.toggle('is-invalid', !match);
+                signupConfirmPassword.classList.toggle('is-valid', match);
+            }
+        });
+
+        signupConfirmPassword.addEventListener('input', () => {
+            const match = signupPassword.value === signupConfirmPassword.value;
+            signupConfirmPassword.classList.toggle('is-invalid', !match);
+            signupConfirmPassword.classList.toggle('is-valid', match);
+        });
+
+        // 🔒 Submit handler
+        signupForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            registerError.style.display = 'none';
+
+            if (!signupForm.checkValidity()) {
+                signupForm.classList.add('was-validated');
+                return;
+            }
+
+            if (signupPassword.value !== signupConfirmPassword.value) {
+                signupConfirmPassword.classList.add('is-invalid');
+                return;
+            }
+
+            const name = document.getElementById('signupName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = signupPassword.value;
+
+            const userData = { name, email, password };
+
+            try {
+                const res = await fetch('https://localhost:7015/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+
+                if (res.ok) {
+                    alert("Account created successfully! You can now log in.");
+                    signupForm.reset();
+                    signupForm.classList.remove('was-validated');
+                    window.location.href = "UserDashboard.html"; // redirect after success
+                } else {
+                    const error = await res.text();
+                    registerError.textContent = error || 'Registration failed';
+                    registerError.style.display = 'block';
+                }
+            } catch (err) {
+                registerError.textContent = 'Error: ' + err.message;
+                registerError.style.display = 'block';
+            }
+        });
+    </script>
+
+</body>
+</html>

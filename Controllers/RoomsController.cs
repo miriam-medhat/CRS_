@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CRS.Data;
 using CRS.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CRS.Controllers
 {
@@ -76,6 +77,7 @@ namespace CRS.Controllers
 
         // PUT: api/Rooms/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutRoom(int id, Room room)
         {
@@ -107,6 +109,7 @@ namespace CRS.Controllers
 
         // POST: api/Rooms
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<Room>> PostRoom(Room room)
         {
@@ -117,6 +120,7 @@ namespace CRS.Controllers
         }
 
         // DELETE: api/Rooms/5
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRoom(int id)
         {

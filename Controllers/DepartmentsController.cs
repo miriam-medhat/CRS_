@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CRS.Data;
 using CRS.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CRS.Controllers
 {
@@ -44,6 +45,7 @@ namespace CRS.Controllers
 
         // PUT: api/Departments/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutDepartment(int id, Department department)
         {
@@ -75,6 +77,7 @@ namespace CRS.Controllers
 
         // POST: api/Departments
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<Department>> PostDepartment(Department department)
         {
@@ -85,6 +88,7 @@ namespace CRS.Controllers
         }
 
         // DELETE: api/Departments/5
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteDepartment(int id)
         {

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign In</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <style>
+    body {
+      background-color: #f0f8ff;
+    }
+    .btn-primary {
+      background-color: #3399ff;
+      border: none;
+    }
+    .btn-primary:hover {
+      background-color: #007acc;
+    }
+    .form-container {
+      max-width: 450px;
+      margin: 50px auto;
+      padding: 30px;
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    }
+    .form-label {
+      font-weight: 500;
+    }
+    .forgot-link {
+      display: block;
+      margin-top: 10px;
+      text-align: right;
+    }
+    .signup-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .login-error {
+      color: #dc3545;
+      margin-bottom: 15px;
+      text-align: center;
+      display: none;
+    }
+    .password-input-group {
+      display: flex;
+      align-items: center;
+    }
+    .password-input-group .form-control {
+      border-right: none;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    .password-input-group .btn {
+      border-left: none;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      background-color: #f8f9fa;
+      padding: 0.375rem 0.75rem;
+    }
+    .password-input-group .btn:hover {
+      background-color: #e9ecef;
+    }
+  </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="form-container">
+            <h2 class="mb-4 text-center">Sign In</h2>
+            <div class="login-error" id="loginError">Wrong email or password</div>
+            <form id="signinForm" novalidate>
+                <!-- Email -->
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email address</label>
+                    <input type="email" class="form-control" id="email" placeholder="user@example.com" required />
+                    <div class="invalid-feedback">Please enter a valid email.</div>
+                </div>
+
+                <!-- Password -->
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="password-input-group">
+                        <input type="password" class="form-control" id="password" required />
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                            <span id="toggleIcon">🔒</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Forgot link -->
+                <a href="#" class="forgot-link" data-bs-toggle="modal" data-bs-target="#forgotModal">Forgot Password?</a>
+
+                <!-- Submit -->
+                <button type="submit" class="btn btn-primary w-100 mt-3">Sign In</button>
+
+                <!-- Sign Up link -->
+                <div class="signup-link">
+                    Don't have an account? <a href="SignUp.html" target="_self">Sign Up</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal fade" id="forgotModal" tabindex="-1" aria-labelledby="forgotModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="forgotModalLabel">Reset Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="forgotPasswordForm" novalidate>
+                        <div class="mb-3">
+                            <label for="resetEmail" class="form-label">Enter your email address</label>
+                            <input type="email" class="form-control" id="resetEmail" placeholder="example@domain.com" required />
+                            <div class="invalid-feedback">Please enter a valid email address.</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Send Reset Link</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const signinForm = document.getElementById('signinForm');
+        const emailInput = document.getElementById('email'); // Make sure your email input has id="email"
+        const password = document.getElementById('password');
+        const togglePassword = document.getElementById('togglePassword');
+        const toggleIcon = document.getElementById('toggleIcon');
+        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        const loginError = document.getElementById('loginError');
+
+        // Handle Sign In Form
+        signinForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            loginError.style.display = 'none';
+
+            if (!signinForm.checkValidity()) {
+                event.stopPropagation();
+                signinForm.classList.add('was-validated');
+                return;
+            }
+
+            const email = emailInput.value.trim();
+            const pwd = password.value;
+
+            try {
+                const res = await fetch('https://localhost:7015/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password: pwd })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    localStorage.setItem('token', data.token); // Save token for future requests
+
+                    // Optionally decode token to get user role
+                    const payload = JSON.parse(atob(data.token.split('.')[1]));
+                    const role = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+
+                    if (role === 'Admin') {
+                        window.location.href = 'AdminDashboard.html';
+                    } else {
+                        window.location.href = 'UserDashboard.html';
+                    }
+                } else {
+                    const err = await res.text();
+                    loginError.textContent = err || 'Login failed.';
+                    loginError.style.display = 'block';
+                }
+
+            } catch (error) {
+                loginError.textContent = 'Error: ' + error.message;
+                loginError.style.display = 'block';
+            }
+        });
+
+        // Toggle password visibility
+        togglePassword.addEventListener('click', function () {
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            toggleIcon.textContent = type === 'password' ? '🔒' : '🔓';
+        });
+
+        // Forgot Password Modal
+        forgotPasswordForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            forgotPasswordForm.classList.add('was-validated');
+            if (forgotPasswordForm.checkValidity()) {
+                alert("Reset link sent to your email!");
+                const modal = bootstrap.Modal.getInstance(document.getElementById('forgotModal'));
+                modal.hide();
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -93,8 +93,10 @@ namespace CRS.Controllers
             return Ok(course);
         }
 
-      
+
         // POST: api/Courses
+
+        [Authorize(Roles = "Admin")] // only Admin
         [HttpPost]
         public async Task<ActionResult<CoursesDto>> PostCourse(CoursesDto dto)
         {
@@ -141,6 +143,8 @@ namespace CRS.Controllers
 
 
         // put : api/Courses
+
+        [Authorize(Roles = "Admin")] // only Admin
         [HttpPut("{id}")]
         public async Task<IActionResult> PutCourse(int id, CoursesDto dto)
         {

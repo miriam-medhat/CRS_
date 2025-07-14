@@ -3,6 +3,7 @@
     "http": {
       "commandName": "Project",
       "launchBrowser": true,
+      "launchUrl": "login/GetStarted.html",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
@@ -10,6 +11,8 @@
       "applicationUrl": "http://localhost:5245"
     },
     "https": {
+      "launchUrl": "login/GetStarted.html",
+
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
@@ -21,6 +24,7 @@
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
+      "launchUrl": "login/GetStarted.html",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

@@ -2,8 +2,8 @@
 {
     public enum CourseStates
     {
-        available,
-        pending,
-        registered
+        Available,
+        Pending,
+        Registered
     }
 }

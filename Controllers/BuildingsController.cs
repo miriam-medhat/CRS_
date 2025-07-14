@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CRS.Data;
 using DotNET.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CRS.Controllers
 {
@@ -44,6 +45,7 @@ namespace CRS.Controllers
 
         // PUT: api/Buildings/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> PutBuilding(int id, Building building)
         {
@@ -75,6 +77,7 @@ namespace CRS.Controllers
 
         // POST: api/Buildings
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<Building>> PostBuilding(Building building)
         {
@@ -85,6 +88,7 @@ namespace CRS.Controllers
         }
 
         // DELETE: api/Buildings/5
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBuilding(int id)
         {
