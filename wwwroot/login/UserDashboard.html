@@ -60,10 +60,28 @@
                 margin-left: 250px;
             }
         }
+
+        /* Updated badge styles */
+        .badge-pending {
+            background-color: #fff3cd !important;
+            color: #856404 !important;
+            font-weight: 500;
+            border-radius: 0.5rem;
+            padding: 0.4em 0.6em;
+        }
+
+        .badge-withdrawn {
+            background-color: #f8d7da !important;
+            color: #721c24 !important;
+            font-weight: 500;
+            border-radius: 0.5rem;
+            padding: 0.4em 0.6em;
+        }
     </style>
 </head>
 <body>
 
+    <!-- Navigation and sidebar remain the same -->
     <nav class="navbar bg-light fixed-top px-3">
         <button class="btn btn-primary" id="toggleSidebar">☰</button>
     </nav>
@@ -85,6 +103,7 @@
             <div class="row g-4" id="cardContainer"></div>
         </div>
     </div>
+
     <script>
         const token = localStorage.getItem("token");
         if (!token) window.location.href = "login.html";
@@ -114,17 +133,22 @@
 
         function filterCourses(view) {
             if (view === 'available') {
-                return courses.filter(c => !reservations.some(r => r.courseTitle === c.title));
+                return courses.filter(c => !reservations.some(r => r.courseTitle.trim().toLowerCase() === c.title.trim().toLowerCase()));
             } else {
                 return reservations.map(r => ({
-                    ...courses.find(c => c.title === r.courseTitle),
+                    ...courses.find(c => c.title.trim().toLowerCase() === r.courseTitle.trim().toLowerCase()),
                     status: r.status
                 })).filter(c => c);
             }
         }
 
         function renderCourses(list) {
+            console.log("Rendering courses:", list); 
+            console.log("Current reservations:", reservations); 
+
             cardContainer.innerHTML = '';
+            const isAvailableTab = document.querySelector('.nav-link.active').id === 'registerCoursesLink';
+
             list.forEach(course => {
                 const col = document.createElement('div');
                 col.className = 'col-md-4';
@@ -132,53 +156,85 @@
                 const card = document.createElement('div');
                 card.className = 'card h-100 shadow-sm';
 
-                // Match reservation if exists
-                const reservation = reservations.find(r => r.courseTitle === course.title);
+                // Case-insensitive matching
+                const reservation = reservations.find(r =>
+                    r.courseTitle.trim().toLowerCase() === course.title.trim().toLowerCase()
+                );
+
+                console.log(`Course: ${course.title}, Reservation:`, reservation); // Debug log
+
                 let badge = '';
                 let btn = '';
 
-                if (reservation?.status === 'Accepted') {
-                    badge = `<span class="badge bg-success-subtle text-success">Registered</span>`;
-                    btn = `<button class="btn btn-danger withdraw-btn" data-title="${course.title}">Withdraw</button>`;
-                } else if (reservation?.status === 'Pending') {
-                    badge = `<span class="badge bg-warning-subtle text-warning">Pending</span>`;
-                    btn = `<button class="btn btn-danger withdraw-btn" data-title="${course.title}">Withdraw</button>`;
-                } else {
+                if (reservation) {
+                    switch (reservation.status) {
+                        case 'Accepted':
+                            badge = `<span class="badge bg-success">Registered</span>`;
+                            if (!isAvailableTab) {
+                                btn = `<button class="btn btn-danger withdraw-btn" data-title="${course.title}">Withdraw</button>`;
+                            }
+                            break;
+                        case 'Pending':
+                            badge = `<span class="badge badge-pending">Pending</span>`;
+                            if (!isAvailableTab) {
+                                btn = `<button class="btn btn-danger withdraw-btn" data-title="${course.title}">Withdraw</button>`;
+                            }
+                            break;
+                        case 'Withdrawn':
+                            badge = `<span class="badge badge-withdrawn">Withdrawn</span>`;
+                            break;
+                        default:
+                            console.warn("Unknown reservation status:", reservation.status);
+                    }
+                } else if (isAvailableTab) {
                     btn = `<button class="btn btn-primary register-btn" data-title="${course.title}">Register</button>`;
                 }
 
                 card.innerHTML = `
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title">${course.title}</h5>
-            <p class="card-text">${course.description}</p>
-            <p><strong>Department:</strong> ${course.department}</p>
-            <p><strong>Location:</strong> ${course.building}, Room ${course.room}</p>
-            <p><strong>Capacity:</strong> ${course.capacity}</p>
-            <div class="mt-auto d-flex justify-content-between align-items-center">
-              ${badge}
-              ${btn}
-            </div>
-          </div>
-        `;
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">${course.title}</h5>
+                            <p class="card-text">${course.description}</p>
+                            <p><strong>Department:</strong> ${course.department}</p>
+                            <p><strong>Location:</strong> ${course.building}, Room ${course.room}</p>
+                            <p><strong>Capacity:</strong> ${course.capacity}</p>
+                            <div class="mt-auto d-flex justify-content-between align-items-center">
+                                ${badge}
+                                ${btn}
+                            </div>
+                        </div>
+                    `;
 
                 col.appendChild(card);
                 cardContainer.appendChild(col);
             });
         }
 
-
         async function fetchCourses() {
-            const res = await fetch("https://localhost:7015/api/courses", {
-                headers: { Authorization: "Bearer " + token }
-            });
-            return await res.json();
+            try {
+                const res = await fetch("https://localhost:7015/api/courses", {
+                    headers: { Authorization: "Bearer " + token }
+                });
+                if (!res.ok) throw new Error("Failed to fetch courses");
+                return await res.json();
+            } catch (error) {
+                console.error("Error fetching courses:", error);
+                alert("Error loading courses. Please try again.");
+                return [];
+            }
         }
 
         async function fetchReservations() {
-            const res = await fetch("https://localhost:7015/api/Reservation/my-reservations", {
-                headers: { Authorization: "Bearer " + token }
-            });
-            return await res.json();
+            try {
+                const res = await fetch("https://localhost:7015/api/Reservation/my-reservations", {
+                    headers: { Authorization: "Bearer " + token }
+                });
+                if (!res.ok) throw new Error("Failed to fetch reservations");
+                return await res.json();
+            } catch (error) {
+                console.error("Error fetching reservations:", error);
+                alert("Error loading reservations. Please try again.");
+                return [];
+            }
         }
 
         document.addEventListener("click", async e => {
@@ -187,7 +243,6 @@
 
             if (registerBtn) {
                 const title = registerBtn.getAttribute("data-title");
-
                 try {
                     const res = await fetch("https://localhost:7015/api/reservation/reserve", {
                         method: "POST",
@@ -201,9 +256,8 @@
                     if (res.ok) {
                         alert("Reservation successful.");
                         reservations = await fetchReservations();
-                        renderCourses(filterCourses(
-                            document.querySelector('.nav-link.active').id === 'registerCoursesLink' ? 'available' : 'my'
-                        ));
+                        const view = document.querySelector('.nav-link.active').id === 'registerCoursesLink' ? 'available' : 'my';
+                        renderCourses(filterCourses(view));
                     } else {
                         const error = await res.text();
                         alert("Error: " + error);
@@ -211,12 +265,10 @@
                 } catch (err) {
                     alert("Network error: " + err.message);
                 }
-             
             }
 
             if (withdrawBtn) {
                 const title = withdrawBtn.getAttribute("data-title");
-
                 try {
                     const res = await fetch(`https://localhost:7015/api/Reservation/withdraw/${encodeURIComponent(title)}`, {
                         method: "DELETE",
@@ -226,9 +278,8 @@
                     if (res.ok) {
                         alert("Withdrawn successfully.");
                         reservations = await fetchReservations();
-                        renderCourses(filterCourses(
-                            document.querySelector('.nav-link.active').id === 'registerCoursesLink' ? 'available' : 'my'
-                        ));
+                        const view = document.querySelector('.nav-link.active').id === 'registerCoursesLink' ? 'available' : 'my';
+                        renderCourses(filterCourses(view));
                     } else {
                         const error = await res.text();
                         alert("Error: " + error);
@@ -242,21 +293,6 @@
         searchInput.addEventListener("input", () => {
             const keyword = searchInput.value.toLowerCase();
             const activeTab = document.querySelector(".nav-link.active").id;
-            const isAvailableTab = document.querySelector('.nav-link.active').id === 'registerCoursesLink';
-
-         
-            if (reservation?.status === 'Accepted') {
-                badge = `<span class="badge bg-success-subtle text-success">Registered</span>`;
-                if (!isAvailableTab)
-                    btn = `<button class="btn btn-danger withdraw-btn" data-title="${course.title}">Withdraw</button>`;
-            } else if (reservation?.status === 'Pending') {
-                badge = `<span class="badge bg-warning-subtle text-warning">Pending</span>`;
-                if (!isAvailableTab)
-                    btn = `<button class="btn btn-danger withdraw-btn" data-title="${course.title}">Withdraw</button>`;
-            } else {
-                if (isAvailableTab)
-                    btn = `<button class="btn btn-primary register-btn" data-title="${course.title}">Register</button>`;
-            }
             const view = activeTab === "registerCoursesLink" ? "available" : "my";
             const filtered = filterCourses(view).filter(course =>
                 course.title.toLowerCase().includes(keyword) ||
@@ -267,12 +303,17 @@
         });
 
         (async function loadAll() {
-            courses = await fetchCourses();
-            reservations = await fetchReservations();
-            renderCourses(filterCourses('available'));
+            try {
+                [courses, reservations] = await Promise.all([
+                    fetchCourses(),
+                    fetchReservations()
+                ]);
+                console.log("Loaded data:", { courses, reservations }); // Debug log
+                renderCourses(filterCourses('available'));
+            } catch (error) {
+                console.error("Initialization error:", error);
+            }
         })();
     </script>
-
-
 </body>
 </html>
