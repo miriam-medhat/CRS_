@@ -77,7 +77,7 @@ public class ReservationController : ControllerBase
         var result = reservations.Select(r => new
         {
             r.Id,
-            r.Status,
+           Status= r.Status.ToString(),
             r.RequestDate,
             CourseTitle = r.Course.Title
         });
