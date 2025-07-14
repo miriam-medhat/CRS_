@@ -133,6 +133,8 @@
                     </div>
                     <div class="invalid-feedback">Passwords must match.</div>
                 </div>
+                <div id="registerError" class="alert alert-danger" style="display: none;"></div>
+
                 <button type="submit" class="btn btn-primary w-100">Create Account</button>
             </form>
 
@@ -218,10 +220,12 @@
 
             const name = document.getElementById('signupName').value.trim();
             const email = document.getElementById('signupEmail').value.trim();
-            const password = signupPassword.value;
+            const password = document.getElementById('signupPassword').value;
 
             const userData = { name, email, password };
 
+
+           
             try {
                 const res = await fetch('https://localhost:7015/register', {
                     method: 'POST',
@@ -233,7 +237,7 @@
                     alert("Account created successfully! You can now log in.");
                     signupForm.reset();
                     signupForm.classList.remove('was-validated');
-                    window.location.href = "UserDashboard.html"; // redirect after success
+                    window.location.href = "SignIn.html"; // redirect after success
                 } else {
                     const error = await res.text();
                     registerError.textContent = error || 'Registration failed';

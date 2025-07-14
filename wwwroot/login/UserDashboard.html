@@ -132,13 +132,15 @@
                 const card = document.createElement('div');
                 card.className = 'card h-100 shadow-sm';
 
+                // Match reservation if exists
+                const reservation = reservations.find(r => r.courseTitle === course.title);
                 let badge = '';
                 let btn = '';
 
-                if (course.status === 'Accepted') {
+                if (reservation?.status === 'Accepted') {
                     badge = `<span class="badge bg-success-subtle text-success">Registered</span>`;
                     btn = `<button class="btn btn-danger withdraw-btn" data-title="${course.title}">Withdraw</button>`;
-                } else if (course.status === 'Pending') {
+                } else if (reservation?.status === 'Pending') {
                     badge = `<span class="badge bg-warning-subtle text-warning">Pending</span>`;
                     btn = `<button class="btn btn-danger withdraw-btn" data-title="${course.title}">Withdraw</button>`;
                 } else {
@@ -146,22 +148,24 @@
                 }
 
                 card.innerHTML = `
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">${course.title}</h5>
-                        <p class="card-text">${course.description}</p>
-                        <p><strong>Department:</strong> ${course.department}</p>
-                        <p><strong>Location:</strong> ${course.building}, Room ${course.room}</p>
-                        <p><strong>Capacity:</strong> ${course.capacity}</p>
-                        <div class="mt-auto d-flex justify-content-between align-items-center">
-                            ${badge || ''}
-                            ${btn}
-                        </div>
-                    </div>
-                `;
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title">${course.title}</h5>
+            <p class="card-text">${course.description}</p>
+            <p><strong>Department:</strong> ${course.department}</p>
+            <p><strong>Location:</strong> ${course.building}, Room ${course.room}</p>
+            <p><strong>Capacity:</strong> ${course.capacity}</p>
+            <div class="mt-auto d-flex justify-content-between align-items-center">
+              ${badge}
+              ${btn}
+            </div>
+          </div>
+        `;
+
                 col.appendChild(card);
                 cardContainer.appendChild(col);
             });
         }
+
 
         async function fetchCourses() {
             const res = await fetch("https://localhost:7015/api/courses", {
@@ -207,6 +211,7 @@
                 } catch (err) {
                     alert("Network error: " + err.message);
                 }
+             
             }
 
             if (withdrawBtn) {
@@ -237,6 +242,21 @@
         searchInput.addEventListener("input", () => {
             const keyword = searchInput.value.toLowerCase();
             const activeTab = document.querySelector(".nav-link.active").id;
+            const isAvailableTab = document.querySelector('.nav-link.active').id === 'registerCoursesLink';
+
+         
+            if (reservation?.status === 'Accepted') {
+                badge = `<span class="badge bg-success-subtle text-success">Registered</span>`;
+                if (!isAvailableTab)
+                    btn = `<button class="btn btn-danger withdraw-btn" data-title="${course.title}">Withdraw</button>`;
+            } else if (reservation?.status === 'Pending') {
+                badge = `<span class="badge bg-warning-subtle text-warning">Pending</span>`;
+                if (!isAvailableTab)
+                    btn = `<button class="btn btn-danger withdraw-btn" data-title="${course.title}">Withdraw</button>`;
+            } else {
+                if (isAvailableTab)
+                    btn = `<button class="btn btn-primary register-btn" data-title="${course.title}">Register</button>`;
+            }
             const view = activeTab === "registerCoursesLink" ? "available" : "my";
             const filtered = filterCourses(view).filter(course =>
                 course.title.toLowerCase().includes(keyword) ||

@@ -27,15 +27,18 @@ namespace CRS.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(User user)
+        public async Task<IActionResult> Register([FromBody] RegisterDto userDto)
         {
-            if (await _context.User.AnyAsync(u => u.Email == user.Email))
+            if (await _context.User.AnyAsync(u => u.Email == userDto.Email))
                 return BadRequest("Email already exists.");
 
-            // ✅ Set default role before hashing and saving
-            user.Roles = RolesEnum.User;
-
-            user.Password = new PasswordHasher<User>().HashPassword(user, user.Password);
+            var user = new User
+            {
+                Name = userDto.Name,
+                Email = userDto.Email,
+                Roles = RolesEnum.User,
+                Password = new PasswordHasher<User>().HashPassword(null, userDto.Password)
+            };
 
             _context.User.Add(user);
             await _context.SaveChangesAsync();
