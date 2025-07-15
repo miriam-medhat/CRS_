@@ -10,6 +10,7 @@ using CRS.Models;
 using CRS.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using System.Data;
+using System.Security.Claims;
 
 namespace CRS.Controllers
 {
@@ -38,12 +39,14 @@ namespace CRS.Controllers
                     Title = c.Title,
                     Description = c.Description,
                     DepartmentName = c.Department.Name,
-                    DepartmentId=c.DepartmentId,
-                    RoomId=c.RoomId,
+                    DepartmentId = c.DepartmentId,
+                    RoomId = c.RoomId,
                     RoomName = c.Room.Name,
                     BuildingName = c.Building.Name,
+                    BuildingId = c.BuildingId,
+                    Capacity = c.Capacity,
                     Date = c.Date,
-                    CourseStates=c.CourseStates
+                    CourseStates = c.CourseStates
                 })
                 .ToListAsync();
 
@@ -51,7 +54,7 @@ namespace CRS.Controllers
         }
 
 
-      
+
 
         // Get: api/Courses/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -80,7 +83,7 @@ namespace CRS.Controllers
 
                     Capacity = c.Capacity,
                     Date = c.Date,
-                    CourseStates=c.CourseStates
+                    CourseStates = c.CourseStates
                 })
 
                 .FirstOrDefaultAsync();
@@ -100,6 +103,14 @@ namespace CRS.Controllers
         [HttpPost]
         public async Task<ActionResult<CoursesDto>> PostCourse(CoursesDto dto)
         {
+            // Validate foreign keys
+            if (!await _context.Departments.AnyAsync(d => d.DepartmentId == dto.DepartmentId))
+                return BadRequest("Invalid DepartmentId");
+            if (!await _context.Rooms.AnyAsync(r => r.RoomId == dto.RoomId))
+                return BadRequest("Invalid RoomId");
+            if (!await _context.Buildings.AnyAsync(b => b.BuildingId == dto.BuildingId))
+                return BadRequest("Invalid BuildingId");
+
             var course = new Course
             {
                 Title = dto.Title,
@@ -139,6 +150,51 @@ namespace CRS.Controllers
         }
 
 
+        [Authorize]
+        [HttpDelete("withdraw/{courseId}")]
+        public async Task<IActionResult> WithdrawFromCourse(int courseId)
+        {
+            var userIdStr = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr))
+                return Unauthorized("Invalid token.");
+
+            int userId = int.Parse(userIdStr);
+
+            var reservation = await _context.Reservations.FirstOrDefaultAsync(r => r.UserId == userId && r.CourseId == courseId);
+            if (reservation == null)
+                return NotFound("No reservation found for this course.");
+
+            _context.Reservations.Remove(reservation);
+            await _context.SaveChangesAsync();
+
+            return Ok("Withdrawn from course successfully.");
+        }
+
+        [Authorize]
+        [HttpDelete("withdraw/by-title/{courseTitle}")]
+        public async Task<IActionResult> WithdrawFromCourseByTitle(string courseTitle)
+        {
+            var userIdStr = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr))
+                return Unauthorized("Invalid token.");
+
+            int userId = int.Parse(userIdStr);
+
+            var course = await _context.Courses.FirstOrDefaultAsync(c => c.Title.ToLower() == courseTitle.ToLower());
+            if (course == null)
+                return NotFound("Course not found.");
+
+            var reservation = await _context.Reservations.FirstOrDefaultAsync(r => r.UserId == userId && r.CourseId == course.Id);
+            if (reservation == null)
+                return NotFound("No reservation found for this course.");
+
+            _context.Reservations.Remove(reservation);
+            await _context.SaveChangesAsync();
+
+            return Ok("Withdrawn from course successfully by title.");
+        }
+
+
 
 
 
@@ -152,6 +208,14 @@ namespace CRS.Controllers
             {
                 return BadRequest("ID mismatch.");
             }
+
+            // Validate foreign keys
+            if (!await _context.Departments.AnyAsync(d => d.DepartmentId == dto.DepartmentId))
+                return BadRequest("Invalid DepartmentId");
+            if (!await _context.Rooms.AnyAsync(r => r.RoomId == dto.RoomId))
+                return BadRequest("Invalid RoomId");
+            if (!await _context.Buildings.AnyAsync(b => b.BuildingId == dto.BuildingId))
+                return BadRequest("Invalid BuildingId");
 
             var course = await _context.Courses.FindAsync(id);
             if (course == null)

@@ -5,6 +5,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.OpenApi.Models;
+using CRS.Models;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,6 +68,37 @@ builder.Services.AddAuthentication(options =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDBContext>();
+
+    var hasher = new PasswordHasher<User>();
+
+    // List of admin users to ensure are in the database
+    var adminUsers = new List<User>
+    {
+        new User
+        {
+            Name = "Admin",
+            Email = "Admin@123",
+            Roles = RolesEnum.Admin,
+            Password = hasher.HashPassword(null, "Admin@123")
+        },
+
+        
+    };
+
+    foreach (var admin in adminUsers)
+    {
+        if (!context.User.Any(u => u.Email == admin.Email))
+        {
+            context.User.Add(admin);
+        }
+    }
+
+    context.SaveChanges();
+}
 
 // Middleware
 if (app.Environment.IsDevelopment())

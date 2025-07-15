@@ -28,7 +28,9 @@ namespace CRS.Models
         [ForeignKey("RoomId")]
         public Room Room { get; set; }
 
+
         public DateTime Date { get; set; }
+
 
           
         }

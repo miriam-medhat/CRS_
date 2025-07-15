@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="/css/site.css" />
+
+
+    <style>
+        body {
+            background-color: #f0f8ff;
+        }
+
+        .btn-primary {
+            background-color: #3399ff;
+            border: none;
+        }
+
+            .btn-primary:hover {
+                background-color: #007acc;
+            }
+
+        .sidebar {
+            width: 250px;
+            background-color: #e0f0ff;
+            min-height: 100vh;
+            padding-top: 60px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .sidebar .nav-link {
+                color: #007acc;
+                font-weight: 500;
+                padding: 0.75rem 1rem;
+            }
+
+                .sidebar .nav-link.active {
+                    background-color: #f0f8ff;
+                    font-weight: 600;
+                    border-left: 4px solid #3399ff;
+                }
+
+        .main-content {
+            padding: 80px 20px 20px;
+            margin-left: 0;
+            transition: margin-left 0.3s ease;
+        }
+
+        @media (min-width: 769px) {
+            .sidebar.show + .main-content {
+                margin-left: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar bg-light fixed-top px-3 d-flex justify-content-between align-items-center">
+        <button class="btn btn-primary" id="toggleSidebar">☰</button>
+
+        <div class="d-flex align-items-center gap-3">
+            <label class="theme-switch mb-0">
+                <input type="checkbox" id="themeToggleSwitch" onchange="toggleTheme()" />
+                <span class="slider"></span>
+            </label>
+            <button class="btn btn-outline-danger btn-sm" id="signoutBtn">Sign Out</button>
+        </div>
+    </nav>
+
+    <div id="sidebar" class="sidebar show">
+        <nav class="nav flex-column">
+            <a href="#" class="nav-link active" data-section="courses">Courses</a>
+            <a href="#" class="nav-link" data-section="registrations">Registrations</a>
+            <a href="#" class="nav-link" data-section="departments">Departments</a>
+            <a href="#" class="nav-link" data-section="buildings">Buildings</a>
+            <a href="#" class="nav-link" data-section="rooms">Rooms</a>
+            <a href="#" class="nav-link" data-section="users">Users</a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <div class="container-fluid" id="adminContent">
+            <h4>Welcome to Admin Dashboard</h4>
+            <p>Select a section from the sidebar.</p>
+        </div>
+    </div>
+
+    <!-- Modal for Create/Edit Course -->
+    <div class="modal fade" id="courseModal" tabindex="-1" aria-labelledby="courseModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="courseModalLabel">Create/Edit Course</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="form-container">
+                    <div class="modal-body">
+                        <form id="courseForm">
+                            <input type="hidden" id="courseId">
+                            <div class="mb-3">
+                                <label for="courseTitle" class="form-label">Title</label>
+                                <input type="text" class="form-control" id="courseTitle" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="courseDescription" class="form-label">Description</label>
+                                <input type="text" class="form-control" id="courseDescription" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="courseDepartmentId" class="form-label">Department</label>
+                                <select class="form-control" id="courseDepartmentId" required></select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="courseRoomId" class="form-label">Room</label>
+                                <select class="form-control" id="courseRoomId" required></select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="courseBuildingId" class="form-label">Building</label>
+                                <select class="form-control" id="courseBuildingId" required></select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="courseCapacity" class="form-label">Capacity</label>
+                                <input type="number" class="form-control" id="courseCapacity" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="courseDate" class="form-label">Date</label>
+                                <input type="date" class="form-control" id="courseDate" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Create/Edit Department -->
+    <div class="modal fade" id="departmentModal" tabindex="-1" aria-labelledby="departmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="departmentModalLabel">Create/Edit Department</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="departmentForm">
+                        <input type="hidden" id="departmentId">
+                        <div class="mb-3">
+                            <label for="departmentName" class="form-label">Department Name</label>
+                            <input type="text" class="form-control" id="departmentName" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Create/Edit Room -->
+    <div class="modal fade" id="roomModal" tabindex="-1" aria-labelledby="roomModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="roomModalLabel">Create/Edit Room</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="roomForm">
+                        <input type="hidden" id="roomId">
+                        <div class="mb-3">
+                            <label for="roomName" class="form-label">Room Name</label>
+                            <input type="text" class="form-control" id="roomName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="roomBuildingId" class="form-label">Building</label>
+                            <select class="form-control" id="roomBuildingId" required></select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal for Create/Edit Building -->
+    <div class="modal fade" id="buildingModal" tabindex="-1" aria-labelledby="buildingModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="buildingModalLabel">Create/Edit Building</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="buildingForm">
+                        <input type="hidden" id="buildingId">
+                        <div class="mb-3">
+                            <label for="buildingName" class="form-label">Building Name</label>
+                            <input type="text" class="form-control" id="buildingName" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="/js/site.js"></script>
+    <script>
+        const toggleBtn = document.getElementById('toggleSidebar');
+        const sidebar = document.getElementById('sidebar');
+        const navLinks = document.querySelectorAll('.sidebar .nav-link');
+        const contentArea = document.getElementById('adminContent');
+        const token = localStorage.getItem("token");
+
+        let courses = [];
+        let reservations = [];
+
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('show');
+        });
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                loadSection(link.getAttribute('data-section'));
+                if (window.innerWidth < 768) sidebar.classList.remove('show');
+            });
+        });
+
+        function loadSection(section) {
+            if (section === 'courses') {
+                let html = `
+                                                                                        <div class="d-flex justify-content-between mb-3">
+                                                                                            <h4>Manage Courses</h4>
+                                                                                            <button class="btn btn-primary" id="createCourseBtn">Create New Course</button>
+                                                                                        </div>
+                                                                                        <div class="row g-4">`;
+
+                courses.forEach(course => {
+                    html += `
+                                                                                            <div class="col-md-4">
+                                                                                                <div class="card h-100 shadow-sm">
+                                                                                                    <div class="card-body d-flex flex-column">
+                                                                                                        <h5 class="card-title">${course.title}</h5>
+                                                                                                        <p class="card-text">${course.description}</p>
+                                                                                                        <p><strong>Department:</strong> ${course.departmentName}</p>
+                                                                                                        <p><strong>Location:</strong> ${course.buildingName}, Room ${course.roomName}</p>
+                                                                                                        <p><strong>Capacity:</strong> ${course.capacity}</p>
+                                                                                                        <div class="mt-auto d-flex justify-content-between">
+                                                                                                            <button class="btn btn-sm btn-warning edit-course-btn" data-id="${course.id}">Edit</button>
+                                                                                                            <button class="btn btn-sm btn-danger delete-course-btn" data-id="${course.id}">Delete</button>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>`;
+                });
+
+                html += '</div>';
+                contentArea.innerHTML = html;
+
+                // Add event listeners for create, edit, delete
+                document.getElementById('createCourseBtn').onclick = () => openCourseModal();
+                document.querySelectorAll('.edit-course-btn').forEach(btn => {
+                    btn.onclick = () => openCourseModal(btn.getAttribute('data-id'));
+                });
+                document.querySelectorAll('.delete-course-btn').forEach(btn => {
+                    btn.onclick = () => deleteCourse(btn.getAttribute('data-id'));
+                });
+            }
+
+            else if (section === 'registrations') {
+                fetch('https://localhost:7015/api/reservation', {
+                    headers: { Authorization: "Bearer " + token }
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        let html = `
+                                                                                            <h4>Manage Registrations</h4>
+                                                                                            <table class="table">
+                                                                                                <thead><tr><th>Student</th><th>Course</th><th>Status</th><th>Action</th></tr></thead>
+                                                                                                <tbody>`;
+
+                        data.forEach(r => {
+                            let actionButtons = '';
+                            if (r.status === 'Accepted') {
+                                actionButtons = `<button class="btn btn-danger btn-sm" onclick="updateReservation(${r.id}, 'Rejected')">Reject</button>`;
+                            } else if (r.status === 'Rejected') {
+                                actionButtons = `<button class="btn btn-success btn-sm" onclick="updateReservation(${r.id}, 'Accepted')">Accept</button>`;
+                            } else if (r.status === 'Pending') {
+                                actionButtons = `
+                                                                                                        <button class="btn btn-success btn-sm" onclick="updateReservation(${r.id}, 'Accepted')">Accept</button>
+                                                                                                        <button class="btn btn-danger btn-sm" onclick="updateReservation(${r.id}, 'Rejected')">Reject</button>
+                                                                                                    `;
+                            }
+                            html += `
+                                                                                                <tr>
+                                                                                                    <td>${r.userName}</td>
+                                                                                                    <td>${r.courseTitle}</td>
+                                                                                                    <td>${r.status}</td>
+                                                                                                    <td>${actionButtons}</td>
+                                                                                                </tr>`;
+                        });
+
+                        html += '</tbody></table>';
+                        contentArea.innerHTML = html;
+                    });
+            }
+
+
+            else if (section === 'rooms') {
+                fetch('https://localhost:7015/api/rooms', {
+                    headers: { Authorization: "Bearer " + token }
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        let html = `
+                                                                                                <h4>Manage Rooms</h4>
+                                                                                                <ul class="list-group mb-3">`;
+
+                        data.forEach(r => {
+                            // Support both roomId and id from API
+                            const rid = r.roomId !== undefined ? r.roomId : r.id;
+                            const rname = r.name;
+                            const rbuildingId = r.buildingId !== undefined ? r.buildingId : (r.building && (r.building.buildingId !== undefined ? r.building.buildingId : r.building.id));
+                            html += `
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                        <span>${rname}</span>
+                                                        <span>
+                                                            <button class="btn btn-sm btn-warning me-2 edit-room-btn" data-id="${rid}" data-name="${rname}" data-buildingid="${rbuildingId}">Edit</button>
+                                                            <button class="btn btn-sm btn-danger delete-room-btn" data-id="${rid}">Delete</button>
+                                                        </span>
+                                                    </li>`;
+                        });
+
+                        html += '</ul><button class="btn btn-primary" id="addRoomBtn">Add Room</button>';
+                        contentArea.innerHTML = html;
+
+                        // Add event listeners for room actions
+                        document.getElementById('addRoomBtn').onclick = () => openRoomModal();
+                        document.querySelectorAll('.edit-room-btn').forEach(btn => {
+                            btn.onclick = () => openRoomModal(btn.getAttribute('data-id'), btn.getAttribute('data-name'), btn.getAttribute('data-buildingid'));
+                        });
+                        document.querySelectorAll('.delete-room-btn').forEach(btn => {
+                            btn.onclick = () => deleteRoom(btn.getAttribute('data-id'));
+                        });
+                    })
+                    .catch(err => {
+                        contentArea.innerHTML = `<p>Error loading rooms.</p>`;
+                        console.error(err);
+                    });
+            }
+
+            else if (section === 'departments') {
+                fetch('https://localhost:7015/api/departments', {
+                    headers: { Authorization: "Bearer " + token }
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        let html = `<h4>Manage Departments</h4><ul class="list-group mb-3">`;
+                        data.forEach(dep => {
+                            html += `
+                                                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                                        <span>${dep.name}</span>
+                                                                        <span>
+                                                                            <button class="btn btn-sm btn-warning me-2 edit-department-btn" data-id="${dep.departmentId}" data-name="${dep.name}">Edit</button>
+                                                                            <button class="btn btn-sm btn-danger delete-department-btn" data-id="${dep.departmentId}">Delete</button>
+                                                                        </span>
+                                                                    </li>`;
+                        });
+                        html += '</ul><button class="btn btn-primary" id="addDepartmentBtn">Add Department</button>';
+                        contentArea.innerHTML = html;
+
+                        // Add event listeners for department actions
+                        document.getElementById('addDepartmentBtn').onclick = () => openDepartmentModal();
+                        document.querySelectorAll('.edit-department-btn').forEach(btn => {
+                            btn.onclick = () => openDepartmentModal(btn.getAttribute('data-id'), btn.getAttribute('data-name'));
+                        });
+                        document.querySelectorAll('.delete-department-btn').forEach(btn => {
+                            btn.onclick = () => deleteDepartment(btn.getAttribute('data-id'));
+                        });
+                    })
+                    .catch(err => {
+                        contentArea.innerHTML = `<p>Error loading departments.</p>`;
+                        console.error(err);
+                    });
+            }
+
+            else if (section === 'buildings') {
+                fetch('https://localhost:7015/api/buildings', {
+                    headers: { Authorization: "Bearer " + token }
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        let html = `<h4>Manage Buildings</h4><ul class="list-group mb-3">`;
+                        data.forEach(b => {
+                            html += `
+                                                                                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                                                                        <span>${b.name}</span>
+                                                                                                        <span>
+                                                                                                            <button class="btn btn-sm btn-warning me-2 edit-building-btn" data-id="${b.id}" data-name="${b.name}">Edit</button>
+                                                                                                            <button class="btn btn-sm btn-danger delete-building-btn" data-id="${b.id}">Delete</button>
+                                                                                                        </span>
+                                                                                                    </li>`;
+                        });
+                        html += '</ul><button class="btn btn-primary" id="addBuildingBtn">Add Building</button>';
+                        contentArea.innerHTML = html;
+
+                        // Add event listeners for building actions
+                        document.getElementById('addBuildingBtn').onclick = () => openBuildingModal();
+                        document.querySelectorAll('.edit-building-btn').forEach(btn => {
+                            btn.onclick = () => openBuildingModal(btn.getAttribute('data-id'), btn.getAttribute('data-name'));
+                        });
+                        document.querySelectorAll('.delete-building-btn').forEach(btn => {
+                            btn.onclick = () => deleteBuilding(btn.getAttribute('data-id'));
+                        });
+                    });
+            }
+
+            else if (section === 'users') {
+                fetch('https://localhost:7015/api/users', {
+                    headers: { Authorization: "Bearer " + token }
+                })
+                    .then(res => {
+                        if (!res.ok) {
+                            alert('Failed to fetch users: ' + res.status + ' ' + res.statusText);
+                            console.error('Failed to fetch users:', res);
+                        }
+                        return res.json();
+                    })
+                    .then(data => {
+                        let html = `<h4>Manage Users</h4><ul class="list-group mb-3">`;
+                        data.forEach(user => {
+                            html += `
+                                                                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                                                                    <span>${user.name} (${user.email})</span>
+                                                                                                    <span>
+                                                                                                        <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.userId})">Delete</button>
+                                                                                                    </span>
+                                                                                                </li>`;
+                        });
+                        html += '</ul>';
+                        contentArea.innerHTML = html;
+                    })
+                    .catch(err => {
+                        alert('Error loading users: ' + err);
+                        contentArea.innerHTML = `<p>Error loading users.</p>`;
+                        console.error(err);
+                    });
+            }
+        }
+
+
+
+        async function fetchCourses() {
+            try {
+                const res = await fetch("https://localhost:7015/api/courses", {
+                    headers: { Authorization: "Bearer " + token }
+                });
+                if (!res.ok) throw new Error("Failed to fetch courses");
+                return await res.json();
+            } catch (error) {
+                console.error("Error fetching courses:", error);
+                alert("Error loading courses. Please try again.");
+                return [];
+            }
+        }
+
+        function updateReservation(id, status) {
+            fetch(`https://localhost:7015/api/reservation/${id}/status`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: "Bearer " + token
+                },
+                body: JSON.stringify({ status: status })
+            })
+                .then(async res => {
+                    if (!res.ok) {
+                        const errMsg = await res.text();
+                        alert("Error updating reservation: " + errMsg);
+                        throw new Error(errMsg);
+                    }
+                    loadSection("registrations");
+                })
+                .catch(err => alert("Error updating reservation: " + err));
+        }
+
+        async function fetchCourses() {
+            try {
+                const res = await fetch("https://localhost:7015/api/Courses", {
+                    headers: { Authorization: "Bearer " + token }
+                });
+                if (!res.ok) throw new Error("Failed to fetch courses");
+                return await res.json();
+            } catch (error) {
+                console.error("Error fetching courses:", error);
+                alert("Error loading courses. Please try again.");
+                return [];
+            }
+        }
+
+        (async function () {
+            courses = await fetchCourses();
+            loadSection('courses');
+        })();
+
+        // Add user delete function
+        function deleteUser(id) {
+            if (!confirm('Are you sure you want to delete this user?')) return;
+            fetch(`https://localhost:7015/api/users/${id}`, {
+                method: "DELETE",
+                headers: { Authorization: "Bearer " + token }
+            })
+                .then(res => {
+                    if (!res.ok) {
+                        alert('Failed to delete user: ' + res.status + ' ' + res.statusText);
+                        console.error('Failed to delete user:', res);
+                        throw new Error('Failed to delete user');
+                    }
+                    loadSection('users');
+                })
+                .catch(err => {
+                    alert('Error deleting user: ' + err);
+                    console.error(err);
+                });
+        }
+
+        // Modal logic for create/edit course
+        async function openCourseModal(id = null) {
+            const modal = new bootstrap.Modal(document.getElementById('courseModal'));
+            document.getElementById('courseForm').reset();
+            document.getElementById('courseId').value = '';
+
+            // Fetch and populate dropdowns
+            const [departments, rooms, buildings] = await Promise.all([
+                fetch('https://localhost:7015/api/departments', { headers: { Authorization: 'Bearer ' + token } }).then(r => r.json()),
+                fetch('https://localhost:7015/api/rooms', { headers: { Authorization: 'Bearer ' + token } }).then(r => r.json()),
+                fetch('https://localhost:7015/api/buildings', { headers: { Authorization: 'Bearer ' + token } }).then(r => r.json())
+            ]);
+            const depSelect = document.getElementById('courseDepartmentId');
+            depSelect.innerHTML = departments.map(dep => `<option value="${dep.departmentId}">${dep.name}</option>`).join('');
+            const roomSelect = document.getElementById('courseRoomId');
+            roomSelect.innerHTML = rooms.map(room => `<option value="${room.roomId}">${room.name}</option>`).join('');
+            const buildingSelect = document.getElementById('courseBuildingId');
+            buildingSelect.innerHTML = buildings.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+
+            if (id) {
+                const course = courses.find(c => c.id == id);
+                if (course) {
+                    document.getElementById('courseId').value = course.id;
+                    document.getElementById('courseTitle').value = course.title;
+                    document.getElementById('courseDescription').value = course.description;
+                    depSelect.value = course.departmentId;
+                    roomSelect.value = course.roomId;
+                    buildingSelect.value = course.buildingId;
+                    document.getElementById('courseCapacity').value = course.capacity;
+                    document.getElementById('courseDate').value = course.date ? course.date.split('T')[0] : '';
+                }
+            }
+            modal.show();
+        }
+
+        document.getElementById('courseForm').onsubmit = async function (e) {
+            e.preventDefault();
+            const id = document.getElementById('courseId').value;
+            const dto = {
+                title: document.getElementById('courseTitle').value,
+                description: document.getElementById('courseDescription').value,
+                departmentId: parseInt(document.getElementById('courseDepartmentId').value),
+                roomId: parseInt(document.getElementById('courseRoomId').value),
+                buildingId: parseInt(document.getElementById('courseBuildingId').value),
+                capacity: parseInt(document.getElementById('courseCapacity').value),
+                date: document.getElementById('courseDate').value
+            };
+            try {
+                let res;
+                if (id) {
+                    res = await fetch(`https://localhost:7015/api/Courses/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: 'Bearer ' + token
+                        },
+                        body: JSON.stringify({ ...dto, id: parseInt(id) })
+                    });
+                } else {
+                    res = await fetch('https://localhost:7015/api/Courses', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: 'Bearer ' + token
+                        },
+                        body: JSON.stringify(dto)
+                    });
+                }
+                if (!res.ok) throw new Error(await res.text());
+                bootstrap.Modal.getInstance(document.getElementById('courseModal')).hide();
+                courses = await fetchCourses();
+                loadSection('courses');
+                alert('Course saved successfully!');
+            } catch (err) {
+                alert('Error saving course: ' + err);
+            }
+        };
+
+        async function deleteCourse(id) {
+            if (!confirm('Are you sure you want to delete this course?')) return;
+            try {
+                const res = await fetch(`https://localhost:7015/api/Courses/${id}`, {
+                    method: 'DELETE',
+                    headers: { Authorization: 'Bearer ' + token }
+                });
+                if (!res.ok) throw new Error(await res.text());
+                courses = await fetchCourses();
+                loadSection('courses');
+                alert('Course deleted successfully!');
+            } catch (err) {
+                alert('Error deleting course: ' + err);
+            }
+        }
+
+        // Modal logic for create/edit department
+        function openDepartmentModal(id = null, name = "") {
+            const modal = new bootstrap.Modal(document.getElementById('departmentModal'));
+            document.getElementById('departmentForm').reset();
+            document.getElementById('departmentId').value = id || '';
+            document.getElementById('departmentName').value = name || '';
+            modal.show();
+        }
+
+        document.getElementById('departmentForm').onsubmit = async function (e) {
+            e.preventDefault();
+            const id = document.getElementById('departmentId').value;
+            const name = document.getElementById('departmentName').value.trim();
+            if (!name) {
+                alert('Department name is required.');
+                return;
+            }
+            try {
+                let res;
+                if (id) {
+                    // Edit department
+                    res = await fetch(`https://localhost:7015/api/departments/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: 'Bearer ' + token
+                        },
+                        body: JSON.stringify({ departmentId: parseInt(id), name, courses: [] })
+                    });
+                } else {
+                    // Create department
+                    res = await fetch('https://localhost:7015/api/departments', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: 'Bearer ' + token
+                        },
+                        body: JSON.stringify({ name, courses: [] })
+                    });
+                }
+                if (!res.ok) throw new Error(await res.text());
+                bootstrap.Modal.getInstance(document.getElementById('departmentModal')).hide();
+                loadSection('departments');
+                alert('Department saved successfully!');
+            } catch (err) {
+                alert('Error saving department: ' + err);
+            }
+        };
+
+        async function deleteDepartment(id) {
+            if (!confirm('Are you sure you want to delete this department?')) return;
+            try {
+                const res = await fetch(`https://localhost:7015/api/departments/${id}`, {
+                    method: 'DELETE',
+                    headers: { Authorization: 'Bearer ' + token }
+                });
+                if (!res.ok) throw new Error(await res.text());
+                loadSection('departments');
+                alert('Department deleted successfully!');
+            } catch (err) {
+                alert('Error deleting department: ' + err);
+            }
+        }
+
+        // Modal logic for create/edit room
+        async function openRoomModal(id = null, name = "", buildingId = "") {
+            const modal = new bootstrap.Modal(document.getElementById('roomModal'));
+            document.getElementById('roomForm').reset();
+            document.getElementById('roomId').value = id || '';
+            document.getElementById('roomName').value = name || '';
+            // Populate building dropdown
+            const buildings = await fetch('https://localhost:7015/api/buildings', { headers: { Authorization: 'Bearer ' + token } }).then(r => r.json());
+            const buildingSelect = document.getElementById('roomBuildingId');
+            buildingSelect.innerHTML = buildings.map(b => `<option value="${b.buildingId !== undefined ? b.buildingId : b.id}">${b.name}</option>`).join('');
+            if (buildingId) buildingSelect.value = buildingId;
+            modal.show();
+        }
+
+        document.getElementById('roomForm').onsubmit = async function (e) {
+            e.preventDefault();
+            const id = document.getElementById('roomId').value;
+            const name = document.getElementById('roomName').value.trim();
+            const buildingId = document.getElementById('roomBuildingId').value;
+            if (!name || !buildingId) {
+                alert('Room name and building are required.');
+                return;
+            }
+            try {
+                let res;
+                if (id) {
+                    // Edit room
+                    res = await fetch(`https://localhost:7015/api/rooms/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: 'Bearer ' + token
+                        },
+                        body: JSON.stringify({ roomId: parseInt(id), name, buildingId: parseInt(buildingId), courses: [] })
+                    });
+                } else {
+                    // Create room
+                    res = await fetch('https://localhost:7015/api/rooms', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: 'Bearer ' + token
+                        },
+                        body: JSON.stringify({ name, buildingId: parseInt(buildingId), courses: [] })
+                    });
+                }
+                if (!res.ok) throw new Error(await res.text());
+                bootstrap.Modal.getInstance(document.getElementById('roomModal')).hide();
+                loadSection('rooms');
+                alert('Room saved successfully!');
+            } catch (err) {
+                alert('Error saving room: ' + err);
+            }
+        };
+
+        async function deleteRoom(id) {
+            if (!confirm('Are you sure you want to delete this room?')) return;
+            try {
+                const res = await fetch(`https://localhost:7015/api/rooms/${id}`, {
+                    method: 'DELETE',
+                    headers: { Authorization: 'Bearer ' + token }
+                });
+                if (!res.ok) throw new Error(await res.text());
+                loadSection('rooms');
+                alert('Room deleted successfully!');
+            } catch (err) {
+                alert('Error deleting room: ' + err);
+            }
+        }
+
+        // Modal logic for create/edit building
+        function openBuildingModal(id = null, name = "") {
+            const modal = new bootstrap.Modal(document.getElementById('buildingModal'));
+            document.getElementById('buildingForm').reset();
+            document.getElementById('buildingId').value = id || '';
+            document.getElementById('buildingName').value = name || '';
+            modal.show();
+        }
+
+        document.getElementById('buildingForm').onsubmit = async function (e) {
+            e.preventDefault();
+            const id = document.getElementById('buildingId').value;
+            const name = document.getElementById('buildingName').value.trim();
+            if (!name) {
+                alert('Building name is required.');
+                return;
+            }
+            try {
+                let res;
+                if (id) {
+                    // Edit building
+                    res = await fetch(`https://localhost:7015/api/buildings/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: 'Bearer ' + token
+                        },
+                        body: JSON.stringify({ buildingId: parseInt(id), name })
+                    });
+                } else {
+                    // Create building
+                    res = await fetch('https://localhost:7015/api/buildings', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: 'Bearer ' + token
+                        },
+                        body: JSON.stringify({ name })
+                    });
+                }
+                if (!res.ok) throw new Error(await res.text());
+                bootstrap.Modal.getInstance(document.getElementById('buildingModal')).hide();
+                loadSection('buildings');
+                alert('Building saved successfully!');
+            } catch (err) {
+                alert('Error saving building: ' + err);
+            }
+        };
+
+        async function deleteBuilding(id) {
+            if (!confirm('Are you sure you want to delete this building?')) return;
+            try {
+                const res = await fetch(`https://localhost:7015/api/buildings/${id}`, {
+                    method: 'DELETE',
+                    headers: { Authorization: 'Bearer ' + token }
+                });
+                if (!res.ok) throw new Error(await res.text());
+                loadSection('buildings');
+                alert('Building deleted successfully!');
+            } catch (err) {
+                alert('Error deleting building: ' + err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const signoutBtn = document.getElementById('signoutBtn');
+            if (signoutBtn) {
+                signoutBtn.addEventListener('click', () => {
+                    localStorage.removeItem('token');
+                    window.location.href = 'GetStarted.html';
+                });
+            }
+        });
+
+    </script>
+</body>
+</html>
+

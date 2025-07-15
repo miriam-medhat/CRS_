@@ -4,6 +4,7 @@ using CRS.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CRS.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250715100506_fix")]
+    partial class fix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -45,6 +48,9 @@ namespace CRS.Migrations
                     b.Property<int>("DepartmentId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("DepartmentId1")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -61,6 +67,8 @@ namespace CRS.Migrations
                     b.HasIndex("BuildingId");
 
                     b.HasIndex("DepartmentId");
+
+                    b.HasIndex("DepartmentId1");
 
                     b.HasIndex("RoomId");
 
@@ -190,10 +198,14 @@ namespace CRS.Migrations
                         .IsRequired();
 
                     b.HasOne("CRS.Models.Department", "Department")
-                        .WithMany("Courses")
+                        .WithMany()
                         .HasForeignKey("DepartmentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("CRS.Models.Department", null)
+                        .WithMany("Courses")
+                        .HasForeignKey("DepartmentId1");
 
                     b.HasOne("CRS.Models.Room", "Room")
                         .WithMany("Courses")

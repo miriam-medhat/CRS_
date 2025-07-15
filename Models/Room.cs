@@ -16,7 +16,7 @@ namespace CRS.Models
 
         //reference navigation
         [ForeignKey("BuildingId")]
-        public Building Building { get; set; } //room belongs to one building
+        public Building? Building { get; set; } //room belongs to one building (no [Required] attribute)
 
         //collection navigation
         public ICollection<Course> Courses { get; set; } //room has many courses

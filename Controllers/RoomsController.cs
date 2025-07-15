@@ -23,7 +23,7 @@ namespace CRS.Controllers
         }
 
         //GET: api/Rooms
-       [HttpGet]
+        [HttpGet]
         public async Task<ActionResult<IEnumerable<Room>>> GetRooms()
         {
             return await _context.Rooms.ToListAsync();
@@ -86,6 +86,9 @@ namespace CRS.Controllers
                 return BadRequest();
             }
 
+            // Ensure only buildingId is used
+            room.Building = null;
+
             _context.Entry(room).State = EntityState.Modified;
 
             try
@@ -103,6 +106,10 @@ namespace CRS.Controllers
                     throw;
                 }
             }
+            catch (DbUpdateException ex)
+            {
+                return BadRequest("Database update failed: " + (ex.InnerException?.Message ?? ex.Message));
+            }
 
             return NoContent();
         }
@@ -113,8 +120,18 @@ namespace CRS.Controllers
         [HttpPost]
         public async Task<ActionResult<Room>> PostRoom(Room room)
         {
+            // Ensure only buildingId is used
+            room.Building = null;
+
             _context.Rooms.Add(room);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                return BadRequest("Database update failed: " + (ex.InnerException?.Message ?? ex.Message));
+            }
 
             return CreatedAtAction("GetRoom", new { id = room.RoomId }, room);
         }
@@ -130,8 +147,22 @@ namespace CRS.Controllers
                 return NotFound();
             }
 
+            // Check if any courses reference this room
+            bool isRoomInUse = await _context.Courses.AnyAsync(c => c.RoomId == id);
+            if (isRoomInUse)
+            {
+                return BadRequest("Cannot delete room: it is assigned to one or more courses. Please reassign or delete those courses first.");
+            }
+
             _context.Rooms.Remove(room);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                return BadRequest("Database update failed: " + (ex.InnerException?.Message ?? ex.Message));
+            }
 
             return NoContent();
         }

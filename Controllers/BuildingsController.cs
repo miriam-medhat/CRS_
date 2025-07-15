@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using CRS.Data;
 using DotNET.Models;
 using Microsoft.AspNetCore.Authorization;
+using CRS.Dtos;
 
 namespace CRS.Controllers
 {
@@ -24,24 +25,38 @@ namespace CRS.Controllers
 
         // GET: api/Buildings
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Building>>> GetBuildings()
+        public async Task<ActionResult<IEnumerable<BuildingDto>>> Buildings()
         {
-            return await _context.Buildings.ToListAsync();
+            return await _context.Buildings
+                .Select(b => new BuildingDto
+                {
+                    Id = b.BuildingId,
+                    Name = b.Name
+                })
+                .ToListAsync();
         }
 
         // GET: api/Buildings/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Building>> GetBuilding(int id)
+        public async Task<ActionResult<BuildingDto>> GetBuilding(int id)
         {
-            var building = await _context.Buildings.FindAsync(id);
+            var building = await _context.Buildings
+                .Where(b => b.BuildingId == id)
+                .Select(b => new BuildingDto
+                {
+                    Id = b.BuildingId,
+                    Name = b.Name
+                })
+                .FirstOrDefaultAsync();
 
             if (building == null)
             {
                 return NotFound();
             }
 
-            return building;
+            return Ok(building);
         }
+
 
         // PUT: api/Buildings/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -79,13 +94,17 @@ namespace CRS.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [Authorize(Roles = "Admin")]
         [HttpPost]
-        public async Task<ActionResult<Building>> PostBuilding(Building building)
+        public async Task<ActionResult<Building>> PostBuilding([FromBody] Building building)
         {
+            if (string.IsNullOrWhiteSpace(building.Name))
+                return BadRequest("Building name is required.");
+
             _context.Buildings.Add(building);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetBuilding", new { id = building.BuildingId }, building);
         }
+
 
         // DELETE: api/Buildings/5
         [Authorize(Roles = "Admin")]

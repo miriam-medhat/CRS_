@@ -35,6 +35,7 @@ namespace CRS.Controllers
                 .Where(c => c.CourseStates == CourseStates.Available && !reservedCourseIds.Contains(c.Id))
                 .Include(c => c.Department)
                 .Include(c => c.Building)
+                  .Include(c => c.Room)
                 .ToListAsync();
 
             // 3. Return simplified list
@@ -43,8 +44,9 @@ namespace CRS.Controllers
                 c.Id,
                 c.Title,
                 c.Description,
-                Department = c.Department.Name,
-                Building = c.Building.Name,
+                DepartmentName = c.Department.Name,
+                BuildingName = c.Building.Name,
+                RoomName = c.Room.Name,
                 c.Date,
                 c.Capacity
             });

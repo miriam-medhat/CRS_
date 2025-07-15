@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CRS.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20250710114427_Fix")]
-    partial class Fix
+    [Migration("20250715132113_fixdeptid1")]
+    partial class fixdeptid1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,6 +34,12 @@ namespace CRS.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("BuildingId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CourseStates")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("Date")
@@ -149,6 +155,13 @@ namespace CRS.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Roles")
+                        .HasColumnType("int");
+
                     b.HasKey("UserId");
 
                     b.ToTable("User");
@@ -182,7 +195,7 @@ namespace CRS.Migrations
                     b.HasOne("CRS.Models.Department", "Department")
                         .WithMany("Courses")
                         .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("CRS.Models.Room", "Room")
@@ -203,13 +216,13 @@ namespace CRS.Migrations
                     b.HasOne("CRS.Models.Course", "Course")
                         .WithMany()
                         .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("CRS.Models.User", "User")
                         .WithMany("Reservations")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Course");
